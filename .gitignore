@@ -1,0 +1,28 @@
+# macOS-specific
+.DS_Store
+
+# CMake build directory
+/build/
+
+# Compiled binary
+lc3
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# Logs
+*.log
+
+# Editor/IDE files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+
+*.cast
