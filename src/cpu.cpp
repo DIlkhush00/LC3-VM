@@ -1,6 +1,6 @@
 #include "cpu.hpp"
 
-namespace lc3::cpu
+namespace lc3
 {
     void CPU::setup()
     {

@@ -3,21 +3,19 @@
 
 namespace lc3
 {
-    constexpr uint16_t MEMORY_SIZE = 0x10000; // 64K memory
-
+    
     class Memory
     {
+    private:
+        uint16_t *memory = new uint16_t[UINT16_MAX];
+
     public:
-        Memory();
+        Memory(uint16_t *initial, size_t initial_size) {}
         ~Memory();
 
         uint16_t read(uint16_t address) const;
         void write(uint16_t address, uint16_t value);
         uint16_t get_size() const noexcept;
-
-    private:
-        uint16_t mem[MEMORY_SIZE];
     };
 
-    extern Memory memory; // Global memory instance
 }
