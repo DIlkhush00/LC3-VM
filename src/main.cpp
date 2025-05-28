@@ -5,13 +5,13 @@
 
 #include "cpu.hpp"
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
-    if (argc < 2) 
+    if (argc < 2)
     {
         std::cerr << "Usage: " << argv[0] << " <path_to_binary_file>\n";
-		return 1;
-	}
+        return 1;
+    }
 
     // load the program into memory
     auto memory = std::make_shared<lc3::Memory>(argv[1]);

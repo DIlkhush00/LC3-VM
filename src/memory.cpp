@@ -1,8 +1,10 @@
-#include "memory.hpp"
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
 #include <unistd.h>
+
+#include "memory.hpp"
+#include "io.hpp"
 
 namespace lc3
 {
@@ -30,11 +32,11 @@ namespace lc3
         delete[] memory;
     }
 
-    uint16_t Memory::read(uint16_t address) const
+    uint16_t Memory::read(uint16_t address)
     {
         if (address == MR_KBSR)
         {
-            if (check_key())
+            if (IO::check_key())
             {
                 memory[MR_KBSR] = (1 << 15);
                 memory[MR_KBDR] = getchar(); // getchar() directly updates MR_KBDR
@@ -103,26 +105,9 @@ namespace lc3
         }
     }
 
-    // Helper functions
-
     // Swap bytes for little-endian representation
     uint16_t Memory::swap16(uint16_t x)
     {
         return (x << 8) | (x >> 8);
-    }
-
-    // Check if a key is pressed
-    bool Memory::check_key()
-    {
-        fd_set readfds;
-        FD_ZERO(&readfds);
-        FD_SET(STDIN_FILENO, &readfds);
-
-        struct timeval timeout;
-        timeout.tv_sec = 0;
-        timeout.tv_usec = 0; // Don't wait
-
-        // select returns the number of ready file descriptors, 0 for timeout, -1 for error
-        return select(STDIN_FILENO + 1, &readfds, NULL, NULL, &timeout) == 1;
     }
 }

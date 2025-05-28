@@ -42,4 +42,5 @@ add_executable(
     src/main.cpp
     src/cpu.cpp
     src/memory.cpp
+    src/io.cpp
 )

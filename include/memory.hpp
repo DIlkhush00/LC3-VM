@@ -17,7 +17,6 @@ namespace lc3
         bool read_image(const char *image_path);
         void read_image_file(FILE *file);
         uint16_t swap16(uint16_t x);
-        static bool check_key();
 
     public:
         Memory(uint16_t *initial, size_t initial_size);
@@ -25,7 +24,7 @@ namespace lc3
 
         ~Memory();
 
-        uint16_t read(uint16_t address) const;
+        uint16_t read(uint16_t address);
         void write(uint16_t address, uint16_t value);
         uint16_t get_size() const noexcept;
        
