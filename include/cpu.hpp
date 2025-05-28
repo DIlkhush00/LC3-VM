@@ -256,7 +256,7 @@ namespace lc3
                 break;
 
                 case HALT:
-                    puts("HALT");
+                    puts("\n--- HALT ---");
                     fflush(stdout);
                     running = false;
                     break;

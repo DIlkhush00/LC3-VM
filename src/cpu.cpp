@@ -1,5 +1,12 @@
 #include "cpu.hpp"
 #include <iostream>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/termios.h>
+#include <sys/mman.h>
 
 namespace lc3
 {
@@ -22,7 +29,6 @@ namespace lc3
         &CPU::ins<15>  // TRAP, Execute Trap
     };
 
-
     void CPU::setup()
     {
         running = true;
@@ -43,16 +49,41 @@ namespace lc3
         }
     }
 
+    struct termios original_tio;
+
+    void disable_input_buffering()
+    {
+        tcgetattr(STDIN_FILENO, &original_tio);
+        struct termios new_tio = original_tio;
+        new_tio.c_lflag &= ~ICANON & ~ECHO;
+        tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
+    }
+
+    void restore_input_buffering()
+    {
+        tcsetattr(STDIN_FILENO, TCSANOW, &original_tio);
+    }
+
+    void handle_interrupt(int signal)
+    {
+        restore_input_buffering();
+        printf("\n");
+        exit(-2);
+    }
+
     void CPU::run()
     {
+        signal(SIGINT, handle_interrupt);
+        disable_input_buffering();
+
         setup();
         while (running)
         {
             uint16_t instr = memory->read(reg[PC]++);
-
-            // std::cout << "Executing instruction: " << instr << " At address: " << reg[PC] - 1 << std::endl;
             execute_instruction(instr);
         }
+
+        restore_input_buffering();
     }
 
     void CPU::update_flags(uint16_t value)
@@ -61,7 +92,7 @@ namespace lc3
         {
             reg[COND] = ZRO;
         }
-        else if (value & 0x8000) // Negative
+        else if (value >> 15) // Negative
         {
             reg[COND] = NEG;
         }

@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
+#include <unistd.h>
 
 namespace lc3
 {
@@ -31,8 +32,22 @@ namespace lc3
 
     uint16_t Memory::read(uint16_t address) const
     {
-        if (address < get_size())
+        if (address == MR_KBSR)
         {
+            if (check_key())
+            {
+                memory[MR_KBSR] = (1 << 15);
+                memory[MR_KBDR] = getchar(); // getchar() directly updates MR_KBDR
+            }
+            else
+            {
+                memory[MR_KBSR] = 0;
+            }
+            return memory[MR_KBSR]; // Return the value of MR_KBSR
+        }
+        // For MR_KBDR or any other address:
+        else if (address < get_size())
+        { // Ensure get_size() is UINT16_MAX
             return memory[address];
         }
 
@@ -54,29 +69,60 @@ namespace lc3
         return UINT16_MAX;
     }
 
-    int Memory::read_image(const char *image_path)
+    bool Memory::read_image(const char *image_path)
     {
         FILE *file = fopen(image_path, "rb");
         if (!file)
         {
-            return 0;
-        };
+            delete[] memory;
+            memory = nullptr; // avoid dangling pointer
+            return false;
+        }
         read_image_file(file);
         fclose(file);
-        return 1;
+        return true;
     }
 
     void Memory::read_image_file(FILE *file)
     {
-        /* the origin tells us where in memory to place the image */
+        // the origin tells us where in memory to place the image
         uint16_t origin;
         fread(&origin, sizeof(origin), 1, file);
+        origin = swap16(origin);
 
-        /* we know the maximum file size so we only need one fread */
-        uint16_t max_read = get_size() - origin;
+        // we know the maximum file size so we only need one fread
+        uint16_t max_read = UINT16_MAX - origin;
         uint16_t *p = memory + origin;
         size_t read = fread(p, sizeof(uint16_t), max_read, file);
 
-        std::cout << "memory : " << memory << std::endl;
+        // swap to little endian
+        while (read-- > 0)
+        {
+            *p = swap16(*p);
+            ++p;
+        }
+    }
+
+    // Helper functions
+
+    // Swap bytes for little-endian representation
+    uint16_t Memory::swap16(uint16_t x)
+    {
+        return (x << 8) | (x >> 8);
+    }
+
+    // Check if a key is pressed
+    bool Memory::check_key()
+    {
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(STDIN_FILENO, &readfds);
+
+        struct timeval timeout;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 0; // Don't wait
+
+        // select returns the number of ready file descriptors, 0 for timeout, -1 for error
+        return select(STDIN_FILENO + 1, &readfds, NULL, NULL, &timeout) == 1;
     }
 }
