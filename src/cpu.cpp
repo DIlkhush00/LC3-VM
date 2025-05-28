@@ -1,7 +1,28 @@
 #include "cpu.hpp"
+#include <iostream>
 
 namespace lc3
 {
+    const std::array<CPU::InstructionHandler, 16> CPU::op_table = {
+        &CPU::ins<0>,  // BR, Branch
+        &CPU::ins<1>,  // ADD, Add
+        &CPU::ins<2>,  // LD, Load
+        &CPU::ins<3>,  // ST, Store
+        &CPU::ins<4>,  // JSR, Jump to Subroutine
+        &CPU::ins<5>,  // AND, Bitwise AND
+        &CPU::ins<6>,  // LDR, Load Register
+        &CPU::ins<7>,  // STR, Store Register
+        nullptr,       // RTI, Reserved for RTI (not used)
+        &CPU::ins<9>,  // NOT, Bitwise NOT
+        &CPU::ins<10>, // LDI, Load Indirect
+        &CPU::ins<11>, // STI, Store Indirect
+        &CPU::ins<12>, // JMP, Jump
+        nullptr,       // RES, Reserved (not used)
+        &CPU::ins<14>, // LEA, Load Effective Address
+        &CPU::ins<15>  // TRAP, Execute Trap
+    };
+
+
     void CPU::setup()
     {
         running = true;
@@ -24,9 +45,12 @@ namespace lc3
 
     void CPU::run()
     {
+        setup();
         while (running)
         {
             uint16_t instr = memory->read(reg[PC]++);
+
+            // std::cout << "Executing instruction: " << instr << " At address: " << reg[PC] - 1 << std::endl;
             execute_instruction(instr);
         }
     }

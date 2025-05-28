@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <memory>
 #include <array>
 
@@ -74,7 +73,7 @@ namespace lc3
 
                 if (imm_flag)
                 {
-                    imm5 = sign_extend(instr & 0x1F, 5);
+                    imm5 = signExtend(instr & 0x1F, 5);
                 }
                 else
                 {
@@ -85,13 +84,13 @@ namespace lc3
             // Base + offset
             if (0x00C0 & opbit)
             {
-                base_plus_off = reg[r1] + sign_extend(instr & 0x3F, 6);
+                base_plus_off = reg[r1] + signExtend(instr & 0x3F, 6);
             }
 
             // Indirect address
             if (0x4C0D & opbit)
             {
-                pc_plus_off = reg[PC] + sign_extend(instr & 0x1FF, 9);
+                pc_plus_off = reg[PC] + signExtend(instr & 0x1FF, 9);
             }
 
             // BR, Branch
@@ -149,7 +148,7 @@ namespace lc3
                 reg[R7] = reg[PC];
                 if (long_flag) // JSR
                 {
-                    pc_plus_off = reg[PC] + sign_extend(instr & 0x7FF, 11);
+                    pc_plus_off = reg[PC] + signExtend(instr & 0x7FF, 11);
                     reg[PC] = pc_plus_off;
                 }
                 else // JSRR
@@ -219,11 +218,11 @@ namespace lc3
 
                 case PUTS:
                 {
-                    uint16_t *c = memory + reg[R0];
-                    while (*c)
+                    uint16_t address = reg[R0];
+                    uint16_t ch;
+                    while ((ch = memory->read(address++)))
                     {
-                        putc((char)*c, stdout);
-                        ++c;
+                        putc((char)ch, stdout);
                     }
                     fflush(stdout);
                 }
@@ -242,15 +241,15 @@ namespace lc3
 
                 case PUTSP:
                 {
-                    uint16_t *c = memory + reg[R0];
-                    while (*c)
+                    uint16_t address = reg[R0];
+                    uint16_t val;
+                    while ((val = memory->read(address++)))
                     {
-                        char char1 = (*c) & 0xFF;
+                        char char1 = val & 0xFF;
                         putc(char1, stdout);
-                        char char2 = (*c) >> 8;
+                        char char2 = (val >> 8) & 0xFF;
                         if (char2)
                             putc(char2, stdout);
-                        ++c;
                     }
                     fflush(stdout);
                 }
@@ -259,7 +258,7 @@ namespace lc3
                 case HALT:
                     puts("HALT");
                     fflush(stdout);
-                    running = 0;
+                    running = false;
                     break;
                 }
             }
@@ -285,24 +284,5 @@ namespace lc3
         void setup();
         void run();
         void execute_instruction(uint16_t instr);
-    };
-
-    const std::array<CPU::InstructionHandler, 16> CPU::op_table = {
-        &CPU::ins<0>,  // BR, Branch
-        &CPU::ins<1>,  // ADD, Add
-        &CPU::ins<2>,  // LD, Load
-        &CPU::ins<3>,  // ST, Store
-        &CPU::ins<4>,  // JSR, Jump to Subroutine
-        &CPU::ins<5>,  // AND, Bitwise AND
-        &CPU::ins<6>,  // LDR, Load Register
-        &CPU::ins<7>,  // STR, Store Register
-        nullptr,       // RTI, Reserved for RTI (not used)
-        &CPU::ins<9>,  // NOT, Bitwise NOT
-        &CPU::ins<10>, // LDI, Load Indirect
-        &CPU::ins<11>, // STI, Store Indirect
-        &CPU::ins<12>, // JMP, Jump
-        nullptr,       // RES, Reserved (not used)
-        &CPU::ins<14>, // LEA, Load Effective Address
-        &CPU::ins<15>  // TRAP, Execute Trap
     };
 }

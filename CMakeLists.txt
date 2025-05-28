@@ -40,4 +40,6 @@ endif()
 add_executable(
     ${CMAKE_PROJECT_NAME}
     src/main.cpp
+    src/cpu.cpp
+    src/memory.cpp
 )
